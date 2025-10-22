@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KQuiz Lyderių lentelė · Moderni</title>
+<style>
+  :root{
+    --bg:#080c18;--glass:#0d1428cc;--panel:#0f1730;--muted:#9fb0c8;--ink:#e7ecf7;
+    --accent:#67b8ff;--grid:#1a2342;--ok:#16c784;--warn:#ff9b42;--podium:#132045
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    color:var(--ink);
+    background:
+      radial-gradient(900px 600px at 10% -10%, #15234a 0%, transparent 60%),
+      radial-gradient(800px 500px at 110% 20%, #0f2a4f 0%, transparent 60%),
+      var(--bg);
+    font:15px/1.45 Inter,system-ui,Segoe UI,Roboto,-apple-system,sans-serif
+  }
+  header{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;gap:10px;justify-content:space-between;
+    padding:12px 16px;border-bottom:1px solid var(--grid);
+    backdrop-filter:saturate(1.2) blur(8px);
+    background:linear-gradient(180deg, rgba(13,20,40,.9), rgba(13,20,40,.6));
+  }
+  h1{margin:0;font-size:18px;font-weight:800;letter-spacing:.2px}
+  .badge{font-size:12px;padding:2px 8px;border:1px solid var(--grid);border-radius:999px;color:var(--muted)}
+  .wrap{max-width:1160px;margin:0 auto;padding:14px}
+  .controls{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px
+  }
+  .cell{background:var(--glass);border:1px solid var(--grid);border-radius:14px;padding:8px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  select,input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--grid);background:#0b142b;color:var(--ink);font-size:15px}
+  button{cursor:pointer;padding:10px 12px;border-radius:12px;border:1px solid var(--grid);background:#132045;color:var(--ink);font-size:15px}
+  button.primary{background:var(--accent);border-color:transparent;color:#041020;font-weight:800}
+  .toolbar{display:flex;gap:8px;align-items:center}
+  .right{margin-left:auto}
+  .note{font-size:12px;color:var(--muted);margin:6px 0}
+
+  /* Podium Top 3 */
+  .podium{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;margin:10px 0 14px}
+  .pod{display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(180deg,#111b3a,#0d1428);
+       border:1px solid var(--grid);border-radius:16px;position:relative;height:160px}
+  .pod:nth-child(1){height:190px;outline:1px solid rgba(255,255,255,.06)}
+  .pod .meta{position:absolute;bottom:10px;text-align:center}
+  .pod .meta .nm{font-weight:800}
+  .pod .meta .kpi{font-size:12px;color:var(--muted)}
+  .pod .ring{position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+             width:64px;height:64px;border-radius:50%;border:2px solid #000;box-shadow:0 0 0 3px rgba(255,255,255,.08), 0 8px 30px rgba(0,0,0,.5);overflow:hidden}
+  .pod .rank{position:absolute;top:8px;left:8px;background:#1a2548;border:1px solid var(--grid);border-radius:999px;font-size:12px;padding:2px 8px}
+
+  /* Top 4-10 list */
+  .toplist{display:grid;gap:8px}
+  .row{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:10px;align-items:center;
+       background:rgba(255,255,255,.03);border:1px solid var(--grid);border-radius:14px;padding:8px 10px}
+  .row .avatar{width:40px;height:40px;border-radius:50%;border:1px solid #000;box-shadow:0 0 0 2px rgba(255,255,255,.06)}
+  .row .nm{font-weight:700}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--grid);font-size:12px;color:var(--muted)}
+  .chip{font-size:12px;border:1px solid var(--grid);padding:4px 8px;border-radius:10px;background:#0f1730}
+  .tap{font-size:12px;color:var(--muted)}
+
+  /* Modal */
+  dialog{border:none;border-radius:18px;max-width:960px;width:96vw;background:#0f1730;color:var(--ink);box-shadow:0 10px 40px rgba(0,0,0,.45)}
+  dialog::backdrop{background:rgba(2,8,20,.55)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--grid)}
+  .modal-body{padding:14px}
+  .kpi{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:10px}
+  .kcard{background:#101a37;border:1px solid var(--grid);border-radius:12px;padding:12px}
+  .kcard .h{font-size:12px;color:var(--muted)} .kcard .v{font-size:18px;font-weight:800}
+  .bigChart{width:100%;height:260px;border:1px solid var(--grid);border-radius:12px;background:linear-gradient(180deg,#121a36,#0b142b);margin-top:10px}
+
+  /* Mobile-first adjustments */
+  @media (max-width:720px){
+    .controls{grid-template-columns:1fr 1fr}
+    .podium{grid-template-columns:1fr}
+    .pod{height:140px}
+    .row{grid-template-columns:auto 1fr auto;gap:8px}
+    .row .chip.hide-sm{display:none}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="toolbar">
+      <h1>Lyderių lentelė</h1>
+      <span class="badge" id="lbMeta">kraunama</span>
+    </div>
+    <div class="toolbar right">
+      <button id="refreshBtn">Atnaujinti</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="controls">
+      <div class="cell">
+        <label>Laikotarpis</label>
+        <div class="toolbar" role="tablist" aria-label="Laikotarpis">
+          <button class="primary" data-win="lifetime">Visas laikas</button>
+          <button data-win="d30">30 d.</button>
+          <button data-win="d7">7 d.</button>
+          <button data-win="today">Šiandien</button>
+        </div>
+      </div>
+      <div class="cell">
+        <label>Rūšiuoti pagal</label>
+        <select id="sortSel">
+          <option value="score" selected>Taškus</option>
+          <option value="accuracy">Tikslumą</option>
+          <option value="speed">Greitį (s)</option>
+        </select>
+      </div>
+      <div class="cell">
+        <label>Paieška</label>
+        <input id="searchInp" type="text" placeholder="Žaidėjo vardas" />
+      </div>
+    </div>
+
+    <!-- TOP 3 podium -->
+    <div class="podium" id="podium"></div>
+
+    <!-- Top 4-10 -->
+    <div class="toplist" id="toplist"></div>
+
+    <p class="note">Viešai rodoma: vardas, avataras, sutrumpintas ID, taškai, tikslumas, vidutinis atsakymo laikas sekundėmis.</p>
+  </div>
+
+  <dialog id="playerModal">
+    <div class="modal-head">
+      <div style="display:flex;align-items:center;gap:10px">
+        <img id="pmAvatar" src="" alt="" style="width:40px;height:40px;border-radius:50%;border:1px solid #000;box-shadow:0 0 0 2px rgba(255,255,255,.06)">
+        <div>
+          <strong id="pmName">Žaidėjas</strong>
+          <div class="pill" id="pmHash">id</div>
+        </div>
+      </div>
+      <div><button id="pmClose">Uždaryti</button></div>
+    </div>
+    <div class="modal-body">
+      <div class="kpi" id="pmKpi"></div>
+      <canvas id="pmChart" class="bigChart"></canvas>
+      <p class="note">Grafikas: 30 dienų — tikslumas (%) ir vidutinis atsakymo laikas (s). Stulpeliai: surinkti taškai per dieną.</p>
+    </div>
+  </dialog>
+
+<script>
+(function(){
+  const $ = s=>document.querySelector(s);
+  const $$ = s=>Array.from(document.querySelectorAll(s));
+  const st = { payload:null, list:[], window:'lifetime', sort:'score', search:'', softDemo:false };
+  const lbMeta = $('#lbMeta');
+
+  async function j(url){ const r = await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error(r.status); return r.json(); }
+
+  async function load(){
+    lbMeta.textContent = 'kraunama';
+    try{
+      st.payload = await j('/api/leaderboard');
+    }catch(e){
+      // tylus atsarginis užpildas, kad UI veiktų be mygtukų
+      console.warn('atsarginiai duomenys', e);
+      st.payload = demo();
+      st.softDemo = true;
+    }
+    lbMeta.textContent = `schema ${st.payload.schema} · žaidėjų ${st.payload.total_players}`;
+    filterSort();
+  }
+
+  function blk(p, win){
+    if(win==='today') return p.today||{answers_total:0,answers_correct:0,accuracy_pct:0,avg_answer_ms:0,score_delta:0};
+    if(win==='d7') return (p.rolling&&p.rolling.d7)||{answers:0,accuracy_pct:0,avg_answer_ms:0,score_delta:0};
+    if(win==='d30') return (p.rolling&&p.rolling.d30)||{answers:0,accuracy_pct:0,avg_answer_ms:0,score_delta:0};
+    return p.lifetime||{answers_total:0,answers_correct:0,accuracy_pct:0,avg_answer_ms:0,fastest_ms:0};
+  }
+
+  const toSec = ms => (Math.max(0, ms|0)/1000);
+  const secTxt = ms => toSec(ms).toFixed(1)+' s';
+
+  function keyScore(p){
+    const m = blk(p, st.window);
+    if(st.sort==='score') return st.window==='lifetime' ? (p.score||0) : (m.score_delta||0);
+    if(st.sort==='accuracy') return m.accuracy_pct||0;
+    if(st.sort==='speed') return -(m.avg_answer_ms||1e9);
+    return 0;
+  }
+
+  function filterSort(){
+    const arr = (st.payload.players||[]).slice();
+    const q = st.search.trim().toLowerCase();
+    arr.forEach(p=>p._k = keyScore(p));
+    let out = q ? arr.filter(p=>(p.name||'').toLowerCase().includes(q)) : arr;
+    out.sort((a,b)=>{
+      if(b._k!==a._k) return b._k - a._k;
+      const ma=blk(a,st.window), mb=blk(b,st.window);
+      const aa=ma.accuracy_pct||0, ab=mb.accuracy_pct||0; if(ab!==aa) return ab-aa;
+      const sa=ma.avg_answer_ms||1e9, sb=mb.avg_answer_ms||1e9; if(sa!==sb) return sa-sb;
+      return (a.name||'').localeCompare(b.name||'');
+    });
+    out.forEach((p,i)=>p._rank=i+1);
+    st.list = out;
+    render();
+  }
+
+  function render(){
+    const podium = $('#podium'); const toplist = $('#toplist'); const win = st.window;
+    const list = st.list;
+    const top3 = list.slice(0,3);
+    podium.innerHTML = top3.map((p,i)=>{
+      const m = blk(p,win);
+      const score = win==='lifetime' ? (p.score||0) : (m.score_delta||0);
+      const av = avatarUrl(p); const rk = ['🥈','🥇','🥉'][ i===0?1 : i===1?0 : 2 ]; // visual icon optional
+      return `<button class="pod" data-id="${p.id_hash}" aria-label="Profilis: ${esc(p.name)}">
+        <span class="rank">#${p._rank}</span>
+        <img class="ring" src="${av}" alt="">
+        <div class="meta">
+          <div class="nm">${esc(p.name||'Žaidėjas')}</div>
+          <div class="kpi">Taškai ${num(score)} · Tikslumas ${(m.accuracy_pct??0).toFixed(0)}% · Laikas ${secTxt(m.avg_answer_ms??0)}</div>
+        </div>
+      </button>`;
+    }).join('');
+
+    const rest = list.slice(3,10);
+    toplist.innerHTML = rest.map(p=>{
+      const m = blk(p,win);
+      const score = win==='lifetime' ? (p.score||0) : (m.score_delta||0);
+      const av = avatarUrl(p);
+      return `<button class="row" data-id="${p.id_hash}" aria-label="Profilis: ${esc(p.name)}">
+        <div class="pill">#${p._rank}</div>
+        <div style="display:flex;align-items:center;gap:10px"><img class="avatar" src="${av}" alt=""><div class="nm">${esc(p.name||'Žaidėjas')}</div></div>
+        <div class="chip">Taškai ${num(score)}</div>
+        <div class="chip hide-sm">Tikslumas ${(m.accuracy_pct??0).toFixed(0)}%</div>
+        <div class="chip">Laikas ${secTxt(m.avg_answer_ms??0)}</div>
+      </button>`;
+    }).join('');
+
+    // wire opens
+    $$('#podium .pod, .toplist .row').forEach(el=> el.onclick = ()=> open(el.getAttribute('data-id')));
+  }
+
+  // profile modal
+  async function open(idHash){
+    const dlg = $('#playerModal');
+    const nameEl = $('#pmName'); const hashEl = $('#pmHash');
+    const kpiEl = $('#pmKpi'); const canvas = $('#pmChart'); const avEl = $('#pmAvatar');
+    let p = st.list.find(x=>x.id_hash===idHash);
+    try{ if(!st.softDemo){ const full = await j(`/api/player/${encodeURIComponent(idHash)}`); if(full) p = full; } }catch{}
+    avEl.src = avatarUrl(p);
+    nameEl.textContent = p.name||'Svečias'; hashEl.textContent = idHash.slice(0,16);
+    const L=p.lifetime||{}, T=p.today||{}, R7=p.rolling?.d7||{}, R30=p.rolling?.d30||{};
+    const cards = [
+      {h:'Iš viso taškų', v:num(p.score||0)},
+      {h:'Tikslumas', v:(L.accuracy_pct??0).toFixed(0)+'%'},
+      {h:'Vid. atsakymo laikas', v:secTxt(L.avg_answer_ms??0)},
+      {h:'Greičiausias atsakymas', v:secTxt(L.fastest_ms??0)},
+      {h:'Geriausia serija', v:L.streak_best??0},
+      {h:'Šiandien atsakyta', v:T.answers_total??0},
+      {h:'Šiandien tikslumas', v:(T.accuracy_pct??0).toFixed(0)+'%'},
+      {h:'Šiandien vid. laikas', v:secTxt(T.avg_answer_ms??0)}
+    ];
+    kpiEl.innerHTML = cards.map(c=>`<div class="kcard"><div class="h">${c.h}</div><div class="v">${c.v}</div></div>`).join('');
+    chart30(canvas, p.daily_buckets||{}, L);
+    dlg.showModal();
+    $('#pmClose').onclick = ()=> dlg.close();
+  }
+
+  // avatars from web
+  function avatarUrl(p){
+    // Prioritize API value
+    const raw = (p.avatar_url||'').trim();
+    if(raw && (raw.startsWith('http://') || raw.startsWith('https://'))) return raw;
+    // Stable seeded avatar from pravatar
+    const seed = encodeURIComponent(p.id_hash || p.name || Math.random().toString(36).slice(2));
+    return `https://i.pravatar.cc/128?u=${seed}`;
+  }
+
+  // Charts
+  function setupCanvas(c){ const W = c.width = c.clientWidth * devicePixelRatio; const H = c.height = c.clientHeight * devicePixelRatio; return {ctx:c.getContext('2d'),W,H}; }
+  function chart30(cnv, buckets, L){
+    const {ctx,W,H} = setupCanvas(cnv);
+    ctx.clearRect(0,0,W,H);
+    const days=[]; const today=new Date(); today.setHours(0,0,0,0);
+    for(let i=29;i>=0;i--){ const d=new Date(today); d.setDate(today.getDate()-i);
+      const k=d.toISOString().slice(0,10); const b=buckets[k]||{answers:0,correct:0,avg_ms:null,score:0};
+      const acc=b.answers>0?(100*b.correct/b.answers):null; days.push({acc, avg:b.avg_ms??null, score:b.score||0}); }
+    const pad=36*devicePixelRatio, ox=pad, oy=H-pad, plotW=W-pad*1.2, plotH=H-pad*1.2;
+    ctx.strokeStyle='#203055'; ctx.lineWidth=1*devicePixelRatio; ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ox,oy-plotH); ctx.lineTo(ox+plotW,oy-plotH); ctx.stroke();
+    const toSec = ms => Math.max(0, (ms|0)/1000);
+    const maxSec=Math.max((toSec(L.avg_answer_ms||2000)*2), ...days.map(d=>d.avg?toSec(d.avg):0));
+    const xStep=plotW/Math.max(1,days.length-1);
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; for(let i=1;i<=4;i++){ const y=oy-plotH*i/4; ctx.beginPath(); ctx.moveTo(ox,y); ctx.lineTo(ox+plotW,y); ctx.stroke(); }
+    // accuracy % line
+    ctx.beginPath(); days.forEach((d,i)=>{ if(d.acc==null) return; const x=ox+i*xStep, y=oy-(d.acc/100)*plotH; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.strokeStyle='#67b8ff'; ctx.lineWidth=2*devicePixelRatio; ctx.stroke();
+    // avg seconds line
+    ctx.beginPath(); days.forEach((d,i)=>{ if(d.avg==null) return; const x=ox+i*xStep, y=oy-(toSec(d.avg)/maxSec)*plotH; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.strokeStyle='#16c784'; ctx.lineWidth=2*devicePixelRatio; ctx.stroke();
+    // score bars
+    const maxScore = Math.max(1, ...days.map(d=>d.score));
+    const barW = xStep*0.55;
+    days.forEach((d,i)=>{ const x = ox + i*xStep - barW/2; const h = (d.score/maxScore)*plotH*0.35; ctx.fillStyle='rgba(103,184,255,0.25)'; ctx.fillRect(x, oy-h, barW, h); });
+  }
+
+  // utils
+  function num(n){ return (n||0).toLocaleString('lt-LT',{maximumFractionDigits:0}); }
+  function esc(s){ return String(s).replace(/[&<>\"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c])); }
+
+  // silent fallback data
+  function demo(){
+    const now=new Date(); let r=42; const rnd=(a,b)=>{ r=(r*1664525+1013904223)|0; const t=(r>>>0)/4294967295; return Math.floor(a+t*(b-a+1)); };
+    const names = ['Kostas','Mantas','Ieva','Rūta','Darius','Aistė','Mindaugas','Gintarė','Lukas','Agnė','Saulius','Justė','Paulius','Monika','Tomas','Greta','Edgaras','Ugnė','Emilija','Arnas'];
+    const N=40, players=[];
+    for(let i=0;i<N;i++){
+      const id='sha256:'+(i.toString(16).padStart(2,'0')).repeat(16), name=`${names[i%names.length]} ${String.fromCharCode(65+(i%26))}.`;
+      const score=rnd(200,50000), acc=rnd(35,95)+Math.random(), avg=rnd(900,2600), fastest=rnd(300,800), streak=rnd(2,15);
+      const todayA=rnd(0,80), todayC=Math.min(todayA, Math.floor(todayA*acc/100)), todayAvg=Math.max(650, Math.floor(avg-rnd(-200,200))), todayScore=rnd(0,1500);
+      const buckets={}; for(let d=0; d<45; d++){ const dt=new Date(now.getTime()-d*86400000); dt.setHours(0,0,0,0); const key=dt.toISOString().slice(0,10);
+        const ans=rnd(0,50), cor=Math.min(ans, Math.floor(ans*(acc+rnd(-10,10))/100)), avg_ms=Math.max(600, Math.floor(avg+rnd(-250,180))), sc=Math.floor(ans*10+cor*5+rnd(0,60));
+        buckets[key]={answers:ans, correct:cor, avg_ms, score:sc}; }
+      players.push({id_hash:id, name, avatar_url:'', score,
+        lifetime:{answers_total:rnd(200,3000), answers_correct:rnd(100,2500), accuracy_pct:acc, avg_answer_ms:avg, fastest_ms:fastest, streak_best:streak, last_seen:new Date().toISOString(), first_seen:new Date(now.getTime()-rnd(10,120)*86400000).toISOString()},
+        today:{date:new Date().toISOString().slice(0,10), answers_total:todayA, answers_correct:todayC, accuracy_pct: todayA? (100*todayC/todayA):0, avg_answer_ms:todayAvg, score_delta:todayScore, streak_best:Math.min(streak, rnd(0,streak))},
+        rolling:{d7:{answers:rnd(30,400), accuracy_pct:acc+rnd(-5,5), avg_answer_ms:avg+rnd(-150,120), score_delta:rnd(100,4000)}, d30:{answers:rnd(200,1400), accuracy_pct:acc+rnd(-4,4), avg_answer_ms:avg+rnd(-120,100), score_delta:rnd(1000,15000)}},
+        daily_buckets:buckets
+      });
+    }
+    return {schema:'kquiz-leaderboard.v2', generated_at:new Date().toISOString(), total_players:N, players};
+  }
+
+  // wire UI
+  $('#refreshBtn').onclick = ()=> load();
+  $$('.controls [data-win]').forEach(btn=> btn.onclick = ()=>{
+    $$('.controls [data-win]').forEach(b=> b.classList.remove('primary'));
+    btn.classList.add('primary'); st.window = btn.getAttribute('data-win'); filterSort();
+  });
+  $('#sortSel').onchange = ()=>{ st.sort = $('#sortSel').value; filterSort(); };
+  $('#searchInp').addEventListener('input', ()=>{ st.search = $('#searchInp').value; filterSort(); });
+
+  load();
+})();
+</script>
+</body>
+</html>
